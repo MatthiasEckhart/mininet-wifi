@@ -39,6 +39,7 @@ from mininet.wifi.plot import plot2d, plot3d, plotGraph
 from mininet.wifi.module import module
 from mininet.wifi.propagationModels import propagationModel
 from mininet.wifi.vanet import vanet
+from mininet.wifi.node import Station, AP
 from mininet.sixLoWPAN.net import Mininet_6LoWPAN
 from mininet.sixLoWPAN.module import module as sixLoWPAN_module
 from mininet.sixLoWPAN.link import sixLoWPANLink
@@ -641,10 +642,17 @@ class Mininet_wifi(Mininet):
 
         info('*** Adding hosts and stations:\n')
         for hostName in topo.hosts():
-            if 'sta' in str(hostName):
-                self.addStation(hostName, **topo.nodeInfo(hostName))
+            cls = topo.nodeInfo(hostName).get('cls')
+            if cls is not None:
+                if cls == Station or issubclass(cls, Station):
+                    self.addStation(hostName, **topo.nodeInfo(hostName))
+                else:
+                    self.addHost(hostName, **topo.nodeInfo(hostName))
             else:
-                self.addHost(hostName, **topo.nodeInfo(hostName))
+                if 'sta' in str(hostName):
+                    self.addStation(hostName, **topo.nodeInfo(hostName))
+                else:
+                    self.addHost(hostName, **topo.nodeInfo(hostName))
             info(hostName + ' ')
 
         info('\n*** Adding switches and access point(s):\n')
@@ -654,7 +662,8 @@ class Mininet_wifi(Mininet):
             cls = params.get('cls', self.switch)
             if hasattr(cls, 'batchStartup'):
                 params.setdefault('batch', True)
-            if 'ap' in str(switchName):
+            if cls == AP or issubclass(cls, AP):
+            #if 'ap' in str(switchName):
                 self.addAccessPoint(switchName, **params)
             else:
                 self.addSwitch(switchName, **params)
