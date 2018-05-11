@@ -31,7 +31,7 @@ class Topo_WiFi(Topo):
 
         if not opts and self.sopts:
             opts = self.sopts
-        result = self.addNode(name, isSwitch=True, **opts)
+        result = self.addNode(name, isSwitch=True, isAccessPoint=True, **opts)
         return result
 
     # This legacy port management mechanism is clunky and will probably
@@ -48,19 +48,23 @@ class Topo_WiFi(Topo):
         # New port: number of outlinks + base
         if sport is None:
             src_base = 1 if self.isSwitch(src) else 0
-            if 'ap' in src:
+            if self.is_access_point(src):
                 sport = None
             else:
                 sport = len(ports[ src ]) + src_base
         if dport is None:
             dst_base = 1 if self.isSwitch(dst) else 0
-            if 'ap' in dst:
+            if self.is_access_point(dst):
                 dport = None
             else:
                 dport = len(ports[ dst ]) + dst_base
         ports[ src ][ sport ] = (dst, dport)
         ports[ dst ][ dport ] = (src, sport)
         return sport, dport
+
+    def is_access_point(self, n):
+        """Returns true if node is an access point."""
+        return self.g.node[n].get('isAccessPoint', False)
 
 
 # Our idiom defines additional parameters in build(param...)
